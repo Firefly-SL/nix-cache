@@ -20,13 +20,13 @@
 
         blender-cuda = pkgs.blender.override {
           cudaSupport = true;
-          cudaArches = [ "sm_50" ];
           openUsdSupport = false;
           spaceNavSupport = false;
           jackaudioSupport = false;
         };
 
         cli-packages = pkgs.symlinkJoin {
+          name = "cli-packages";
           paths = with pkgs; [
             cht-sh
             neovim
@@ -48,6 +48,7 @@
         };
 
         dev-packages = pkgs.symlinkJoin {
+          name = "dev-packages";
           paths = with pkgs; [
             bun
             basedpyright
@@ -63,6 +64,7 @@
         };
 
         misc = pkgs.symlinkJoin {
+          name = "misc-packages";
           paths = with pkgs; [
             ly
             niri
