@@ -20,6 +20,9 @@
 
         blender-cuda = pkgs.blender.override {
           cudaSupport = true;
+          cudaArches = [ "sm_50" ];
+          openUsdSupport = false;
+          spaceNavSupport = false;
           jackaudioSupport = false;
         };
 
