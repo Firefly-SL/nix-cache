@@ -18,12 +18,22 @@
     {
       packages.${system} = {
 
-        blender-cuda = pkgs.blender.override {
-          cudaSupport = true;
-          openUsdSupport = false;
-          spaceNavSupport = false;
-          jackaudioSupport = false;
-        };
+        blender-cuda =
+          (pkgs.blender.override {
+            cudaSupport = true;
+            openUsdSupport = false;
+            spaceNavSupport = false;
+            jackaudioSupport = false;
+          }).overrideAttrs
+            (oldAttrs: {
+              cmakeFlags = (oldAttrs.cmakeFlags or [ ]) ++ [
+                "-DWITH_INPUT_SPACENAV=OFF"
+                "-DWITH_CYCLES_DEVICE_HIP=OFF"
+                "-DWITH_CYCLES_HIP_BINARIES=OFF"
+                "-DWITH_CYCLES_DEVICE_ONEAPI=OFF"
+                "-DWITH_CYCLES_ONEAPI_BINARIES=OFF"
+              ];
+            });
 
         cli-packages = pkgs.symlinkJoin {
           name = "cli-packages";
