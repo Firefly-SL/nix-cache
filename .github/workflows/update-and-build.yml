@@ -1,11 +1,16 @@
-name: "Build and do the cache"
+name: Update flake and Build Cache
 
 on:
+  schedule:
+    - cron: '0 12 * * 1'
   workflow_dispatch:
 
 jobs:
-  build:
+  update-and-build:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
     steps:
       - name: Fix AppArmor
         run: |
@@ -37,6 +42,22 @@ jobs:
         with:
           name: firefly-cache
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Update flake.lock
+        run: nix flake update
+
+      - name: Commit and push if changed
+        run: |
+          git add flake.lock
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: update flake.lock [automated]"
+            git push
+          fi
 
       - name: Build nix packages
         run: |
