@@ -1,0 +1,45 @@
+name: "Build and do the cache"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Fix AppArmor
+        run: |
+          sudo sysctl kernel.apparmor_restrict_unprivileged_userns=0
+          sudo sysctl kernel.apparmor_restrict_unprivileged_unconfined=0
+          sudo sysctl kernel.unprivileged_userns_clone=1
+
+      - name: Maximize build space
+        uses: wimpysworld/nothing-but-nix@main
+        with:
+          hatchet-protocol: 'cleave'
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install nix
+        uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=https://github.com/NixOS/nixpkgs/archive/refs/heads/nixpkgs-unstable.tar.gz
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+            substituters = https://cache.nixos.org/ https://firefly-cache.cachix.org
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= firefly-cache.cachix.org-1:R4ZfvGxjVaTVKQQ6kkl3klYwKvHzkU+COTr4v+3wIAE=
+            system-features = gccarch-x86-64-v3 big-parallel
+
+      - name: Setup cachix
+        uses: cachix/cachix-action@v16
+        with:
+          name: firefly-cache
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Build nix packages
+        run: |
+          timeout 5h nix run nixpkgs#nix-fast-build -- \
+            --no-nom \
+            -f .#packages.x86_64-linux

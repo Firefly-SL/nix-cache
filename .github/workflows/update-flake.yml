@@ -1,0 +1,43 @@
+name: Update flake.lock
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * 1'
+
+jobs:
+  update-flake:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+            substituters = https://cache.nixos.org https://firefly-cache.cachix.org
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= firefly-cache.cachix.org-1:R4ZfvGxjVaTVKQQ6kkl3klYwKvHzkU+COTr4v+3wIAE=
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Update flake.lock
+        run: nix flake update
+
+      - name: Commit and push if changed.
+        run: |
+          git add flake.lock
+          if git diff --staged --quiet; then
+            echo "flake.lock is up to date"
+          else
+            git commit -m "chore: update flake.lock [automated]"
+            git push
+          fi
