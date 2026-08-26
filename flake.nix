@@ -81,7 +81,6 @@
             obs-studio
             plezy
             affine
-            rustdesk
             mpv
             flameshot
             hyprpicker
