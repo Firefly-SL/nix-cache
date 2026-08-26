@@ -30,6 +30,8 @@
                 "-DWITH_CYCLES_HIP_BINARIES=OFF"
                 "-DWITH_CYCLES_DEVICE_ONEAPI=OFF"
                 "-DWITH_CYCLES_ONEAPI_BINARIES=OFF"
+                "-DWITH_CYCLES_DEVICE_OPTIX=OFF"
+                "-DCYCLES_CUDA_BINARIES_ARCH=sm_50"
               ];
             });
 
