@@ -1,0 +1,4 @@
+Basically using githubs Ci/CD to build and cache (in cachix) nix updates.
+
+This is very legendary idea i got from mio-19's repo, who does the same stuff but in whole another level.
+This comes very useful if you want to build something in gentoo style, on nix. in my case; blender with CUDA support which will burn my CPU if i did it locally. also some binaries doesn't get cached in unstable branch of nix when you updating, this also solve it. resulting in a non CPU heavy updates in nix.
