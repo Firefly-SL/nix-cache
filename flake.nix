@@ -50,7 +50,7 @@
             lsd
             ripgrep
             fd
-            ffmpeg-full
+            ffmpeg
             pywal16
             awww
             fastfetch
@@ -78,7 +78,10 @@
           paths = with pkgs; [
             ly
             niri
-            obs-studio
+            (obs-studio.override {
+              browserSupport = false;
+              scriptingSupport = false;
+            })
             plezy
             affine
             mpv
