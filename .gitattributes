@@ -1,4 +1,0 @@
-assets/blender/splash.png filter=lfs diff=lfs merge=lfs -text
-assets/blender/startup.blend filter=lfs diff=lfs merge=lfs -text
-assets/blender/userpref.blend filter=lfs diff=lfs merge=lfs -text
-* !text !filter !merge !diff
