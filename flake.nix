@@ -84,8 +84,6 @@
             })
             plezy
             affine
-            anytype
-            siyuan
             mpv
             flameshot
             hyprpicker
