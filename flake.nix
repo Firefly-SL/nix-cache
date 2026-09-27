@@ -33,6 +33,11 @@
                 "-DWITH_CYCLES_DEVICE_OPTIX=OFF"
                 "-DCYCLES_CUDA_BINARIES_ARCH=sm_50"
               ];
+
+              postPatch = (oldAttrs.postPatch or "") + ''
+                cp ${./assets/blender/splash.png} release/datafiles/splash.png
+                cp ${./assets/blender/startup.blend} release/datafiles/startup.blend
+              '';
             });
 
         cli-packages = pkgs.symlinkJoin {
