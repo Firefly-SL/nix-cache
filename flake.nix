@@ -18,6 +18,37 @@
     {
       packages.${system} = {
 
+        kernel-main-machine = pkgs.linuxPackages_latest.kernel.override {
+          structuredExtraConfig = with pkgs.lib.kernel; {
+            MCORE2 = yes;
+            GENERIC_CPU = no;
+
+            HZ_250 = option unset;
+            HZ_1000 = yes;
+            HZ = freeform "1000";
+
+            X86_AMD_PLATFORM_DEVICE = no;
+            AMD_MEM_ENCRYPT = no;
+            CPU_SUP_AMD = no;
+            CPU_SUP_CENTAUR = no;
+            CPU_SUP_ZHAOXIN = no;
+            CPU_SUP_HYGON = no;
+
+            HYPERVISOR_GUEST = no;
+            PARAVIRT = no;
+            XEN = no;
+            KVM_GUEST = no;
+
+            DEBUG_INFO = no;
+            DEBUG_KERNEL = no;
+            KGDB = no;
+            FTRACE = no;
+            STACK_TRACER = no;
+            FUNCTION_TRACER = no;
+            PROFILING = no;
+          };
+        };
+
         blender-cuda =
           (pkgs.blender.override {
             cudaSupport = true;
