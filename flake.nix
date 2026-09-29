@@ -18,7 +18,7 @@
     {
       packages.${system} = {
 
-        kernel-main-machine = pkgs.linuxPackages_latest.kernel;
+        kernel-main-machine = pkgs.linuxPackages_zen.kernel;
         # .override {
         # structuredExtraConfig = with pkgs.lib.kernel; {
         #   EXPERT = yes;
