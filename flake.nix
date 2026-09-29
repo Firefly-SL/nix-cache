@@ -22,24 +22,21 @@
           structuredExtraConfig = with pkgs.lib.kernel; {
             X86_NATIVE_CPU = yes;
 
-            HZ_250 = option unset;
+            HZ_250 = no;
             HZ_1000 = yes;
             HZ = freeform "1000";
 
-            PREEMPT_DYNAMIC = yes;
+            CPU_SUP_AMD = pkgs.lib.mkForce no;
+            CPU_SUP_CENTAUR = pkgs.lib.mkForce no;
+            CPU_SUP_ZHAOXIN = pkgs.lib.mkForce no;
+            CPU_SUP_HYGON = pkgs.lib.mkForce no;
 
-            CPU_SUP_INTEL = yes;
-            CPU_SUP_AMD = no;
-            CPU_SUP_HYGON = no;
-            CPU_SUP_CENTAUR = no;
-            CPU_SUP_ZHAOXIN = no;
+            HYPERVISOR_GUEST = pkgs.lib.mkForce no;
 
-            HYPERVISOR_GUEST = no;
-
-            DEBUG_INFO = no;
-            DEBUG_KERNEL = no;
-            KGDB = no;
-            FTRACE = no;
+            DEBUG_INFO = pkgs.lib.mkForce no;
+            DEBUG_KERNEL = pkgs.lib.mkForce no;
+            KGDB = pkgs.lib.mkForce no;
+            FTRACE = pkgs.lib.mkForce no;
           };
         };
 
