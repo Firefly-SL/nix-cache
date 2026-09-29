@@ -18,30 +18,31 @@
     {
       packages.${system} = {
 
-        kernel-main-machine = pkgs.linuxPackages_latest.kernel.override {
-          structuredExtraConfig = with pkgs.lib.kernel; {
-            EXPERT = yes;
-
-            X86_NATIVE_CPU = yes;
-            CPU_SUP_INTEL = yes;
-
-            HZ_250 = no;
-            HZ_1000 = yes;
-            HZ = freeform "1000";
-
-            CPU_SUP_AMD = pkgs.lib.mkForce no;
-            CPU_SUP_CENTAUR = pkgs.lib.mkForce no;
-            CPU_SUP_ZHAOXIN = pkgs.lib.mkForce no;
-            CPU_SUP_HYGON = pkgs.lib.mkForce no;
-
-            HYPERVISOR_GUEST = pkgs.lib.mkForce no;
-
-            # DEBUG_INFO = pkgs.lib.mkForce no;
-            # DEBUG_KERNEL = pkgs.lib.mkForce no;
-            # KGDB = pkgs.lib.mkForce no;
-            # FTRACE = pkgs.lib.mkForce no;
-          };
-        };
+        kernel-main-machine = pkgs.linuxPackages_zen;
+        # .kernel.override {
+        # structuredExtraConfig = with pkgs.lib.kernel; {
+        #   EXPERT = yes;
+        #
+        #   X86_NATIVE_CPU = yes;
+        #   CPU_SUP_INTEL = yes;
+        #
+        #   HZ_250 = no;
+        #   HZ_1000 = yes;
+        #   HZ = freeform "1000";
+        #
+        #   CPU_SUP_AMD = pkgs.lib.mkForce no;
+        #   CPU_SUP_CENTAUR = pkgs.lib.mkForce no;
+        #   CPU_SUP_ZHAOXIN = pkgs.lib.mkForce no;
+        #   CPU_SUP_HYGON = pkgs.lib.mkForce no;
+        #
+        #   HYPERVISOR_GUEST = pkgs.lib.mkForce no;
+        #
+        #   # DEBUG_INFO = pkgs.lib.mkForce no;
+        #   # DEBUG_KERNEL = pkgs.lib.mkForce no;
+        #   # KGDB = pkgs.lib.mkForce no;
+        #   # FTRACE = pkgs.lib.mkForce no;
+        # };
+        # };
 
         blender-cuda =
           (pkgs.blender.override {
