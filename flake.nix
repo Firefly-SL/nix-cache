@@ -20,32 +20,26 @@
 
         kernel-main-machine = pkgs.linuxPackages_latest.kernel.override {
           structuredExtraConfig = with pkgs.lib.kernel; {
-            MCORE2 = yes;
-            GENERIC_CPU = no;
+            X86_NATIVE_CPU = yes;
 
             HZ_250 = option unset;
             HZ_1000 = yes;
             HZ = freeform "1000";
 
-            X86_AMD_PLATFORM_DEVICE = pkgs.lib.mkForce no;
-            AMD_MEM_ENCRYPT = pkgs.lib.mkForce no;
-            CPU_SUP_AMD = pkgs.lib.mkForce no;
-            CPU_SUP_CENTAUR = pkgs.lib.mkForce no;
-            CPU_SUP_ZHAOXIN = pkgs.lib.mkForce no;
-            CPU_SUP_HYGON = pkgs.lib.mkForce no;
+            PREEMPT_DYNAMIC = yes;
 
-            HYPERVISOR_GUEST = pkgs.lib.mkForce no;
-            PARAVIRT = pkgs.lib.mkForce no;
-            XEN = pkgs.lib.mkForce no;
-            KVM_GUEST = pkgs.lib.mkForce no;
+            CPU_SUP_INTEL = yes;
+            CPU_SUP_AMD = no;
+            CPU_SUP_HYGON = no;
+            CPU_SUP_CENTAUR = no;
+            CPU_SUP_ZHAOXIN = no;
 
-            DEBUG_INFO = pkgs.lib.mkForce no;
-            DEBUG_KERNEL = pkgs.lib.mkForce no;
-            KGDB = pkgs.lib.mkForce no;
-            FTRACE = pkgs.lib.mkForce no;
-            STACK_TRACER = pkgs.lib.mkForce no;
-            FUNCTION_TRACER = pkgs.lib.mkForce no;
-            PROFILING = pkgs.lib.mkForce no;
+            HYPERVISOR_GUEST = no;
+
+            DEBUG_INFO = no;
+            DEBUG_KERNEL = no;
+            KGDB = no;
+            FTRACE = no;
           };
         };
 
