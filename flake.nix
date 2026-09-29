@@ -20,16 +20,16 @@
 
         kernel-main-machine = pkgs.linuxPackages_latest.kernel.override {
           structuredExtraConfig = with pkgs.lib.kernel; {
-            X86_NATIVE_CPU = yes;
+            # X86_NATIVE_CPU = yes;
 
             HZ_250 = no;
             HZ_1000 = yes;
             HZ = freeform "1000";
 
-            CPU_SUP_AMD = pkgs.lib.mkForce no;
-            CPU_SUP_CENTAUR = pkgs.lib.mkForce no;
-            CPU_SUP_ZHAOXIN = pkgs.lib.mkForce no;
-            CPU_SUP_HYGON = pkgs.lib.mkForce no;
+            # CPU_SUP_AMD = pkgs.lib.mkForce no;
+            # CPU_SUP_CENTAUR = pkgs.lib.mkForce no;
+            # CPU_SUP_ZHAOXIN = pkgs.lib.mkForce no;
+            # CPU_SUP_HYGON = pkgs.lib.mkForce no;
 
             HYPERVISOR_GUEST = pkgs.lib.mkForce no;
 
