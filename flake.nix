@@ -1,11 +1,13 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    chaotic.url = "github:chaotic-cx/nyx";
   };
 
   outputs =
     {
       nixpkgs,
+      chaotic,
       ...
     }:
     let
@@ -13,6 +15,9 @@
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
+        overlays = [
+          chaotic.overlays.default
+        ];
       };
     in
     {
