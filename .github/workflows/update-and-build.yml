@@ -61,6 +61,7 @@ jobs:
         with:
           name: firefly-cache
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          pushFilter: '(?i)(nvidia|\.run$)'
 
       - name: Setup Git
         run: |
