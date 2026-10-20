@@ -81,6 +81,6 @@ jobs:
 
       - name: Build nix packages
         run: |
-          nix shell nixpkgs#nix-fast-build nixpkgs#nix-eval-jobs --command nix-fast-build --max-jobs 1 \
+          nix shell nixpkgs#nix-fast-build nixpkgs#nix-eval-jobs --command nix-fast-build --max-jobs 2 \
             --no-nom \
             --flake .#packages.x86_64-linux
