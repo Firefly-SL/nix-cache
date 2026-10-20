@@ -23,15 +23,15 @@
     {
       packages.${system} = {
 
-        kernel-main-machine =
-          let
-            linuxv3 = pkgs.linuxPackages_cachyos.cachyOverride {
-              cachyVars = pkgs.linuxPackages_cachyos.kernel.cachyConfig.cachyVars // {
-                "_processor_opt" = "GENERIC_V3";
-              };
-            };
-          in
-          linuxv3.kernel;
+        # kernel-main-machine =
+        #   let
+        #     linuxv3 = pkgs.linuxPackages_cachyos.cachyOverride {
+        #       cachyVars = pkgs.linuxPackages_cachyos.kernel.cachyConfig.cachyVars // {
+        #         "_processor_opt" = "GENERIC_V3";
+        #       };
+        #     };
+        #   in
+        #   linuxv3.kernel;
 
         blender-cuda =
           (pkgs.blender.override {
