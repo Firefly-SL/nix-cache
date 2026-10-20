@@ -81,6 +81,6 @@ jobs:
 
       - name: Build nix packages
         run: |
-          timeout 5h nix shell nixpkgs#nix-fast-build nixpkgs#nix-eval-jobs --command nix-fast-build \
+          nix shell nixpkgs#nix-fast-build nixpkgs#nix-eval-jobs --command nix-fast-build \
             --no-nom \
             --flake .#packages.x86_64-linux
