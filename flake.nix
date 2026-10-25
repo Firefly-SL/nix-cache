@@ -2,12 +2,17 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     chaotic.url = "github:chaotic-cx/nyx";
+    blender-latest = {
+      url = "github:blender/blender";
+      flake = false;
+    };
   };
 
   outputs =
     {
       nixpkgs,
       chaotic,
+      blender-latest,
       ...
     }:
     let
@@ -40,6 +45,8 @@
             jackaudioSupport = false;
           }).overrideAttrs
             (oldAttrs: {
+              src = blender-latest;
+
               cmakeFlags = (oldAttrs.cmakeFlags or [ ]) ++ [
                 "-DWITH_CYCLES_DEVICE_HIP=OFF"
                 "-DWITH_CYCLES_HIP_BINARIES=OFF"
