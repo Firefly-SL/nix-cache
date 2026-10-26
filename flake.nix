@@ -1,7 +1,6 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    chaotic.url = "github:chaotic-cx/nyx";
     blender-latest = {
       url = "github:blender/blender";
       flake = false;
@@ -11,7 +10,6 @@
   outputs =
     {
       nixpkgs,
-      chaotic,
       blender-latest,
       ...
     }:
@@ -20,9 +18,6 @@
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
-        overlays = [
-          chaotic.overlays.default
-        ];
       };
     in
     {
