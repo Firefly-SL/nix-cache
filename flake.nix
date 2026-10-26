@@ -58,24 +58,27 @@
 
         cli-packages = pkgs.symlinkJoin {
           name = "cli-packages";
-          paths = with pkgs; [
-            cht-sh
-            neovim
-            zoxide
-            tmux
-            cloudflared
-            wiremix
-            btop
-            fzf
-            bat
-            lsd
-            ripgrep
-            fd
-            ffmpeg
-            pywal16
-            awww
-            fastfetch
-          ];
+          paths =
+            (with pkgs; [
+              cht-sh
+              neovim
+              zoxide
+              tmux
+              cloudflared
+              wiremix
+              btop
+              fzf
+              bat
+              lsd
+              ripgrep
+              fd
+              ffmpeg
+              awww
+              fastfetch
+            ])
+            ++ [
+              pkgs-master.pywal16
+            ];
         };
 
         dev-packages = pkgs.symlinkJoin {
