@@ -1,21 +1,22 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    blender-latest = {
-      url = "github:blender/blender";
-      flake = false;
-    };
+    nixpkgs-master.url = "github:NixOS/nixpkgs/master";
   };
 
   outputs =
     {
       nixpkgs,
-      blender-latest,
+      nixpkgs-master,
       ...
     }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
+      pkgs-master = import nixpkgs-master {
         inherit system;
         config.allowUnfree = true;
       };
@@ -34,14 +35,12 @@
           linuxv3.kernel;
 
         blender-cuda =
-          (pkgs.blender.override {
+          (pkgs-master.blender.override {
             cudaSupport = true;
             openUsdSupport = false;
             jackaudioSupport = false;
           }).overrideAttrs
             (oldAttrs: {
-              src = blender-latest;
-
               cmakeFlags = (oldAttrs.cmakeFlags or [ ]) ++ [
                 "-DWITH_CYCLES_DEVICE_HIP=OFF"
                 "-DWITH_CYCLES_HIP_BINARIES=OFF"
