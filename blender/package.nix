@@ -1,21 +1,14 @@
 {
   addDriverRunpath,
   alembic,
-  apple-sdk_15,
-  blender,
   boost,
-  brotli,
   callPackage,
   ceres-solver,
   cmake,
-  config,
-  cudaArches ? cudaPackages.flags.realArches,
   cudaPackages,
-  cudaSupport ? config.cudaSupport,
   dbus,
   draco,
   embree,
-  fetchFromGitHub,
   fetchzip,
   ffmpeg_7,
   fftw,
@@ -24,12 +17,7 @@
   gettext,
   glew,
   gmp,
-  intel-compute-runtime,
-  intel-graphics-compiler,
-  intel-llvm,
-  jackaudioSupport ? false,
   jemalloc,
-  level-zero,
   lib,
   libdecor,
   libepoxy,
@@ -37,7 +25,6 @@
   libGL,
   libGLU,
   libharu,
-  libjack2,
   libjpeg,
   libpng,
   libsamplerate,
@@ -57,10 +44,8 @@
   mesa,
   meshoptimizer,
   nix-update-script,
-  oneapiSupport ? false,
   onetbb,
   openal,
-  opencl-headers,
   opencolorio,
   openexr,
   openimagedenoise,
@@ -68,59 +53,36 @@
   openjpeg,
   openpgl,
   opensubdiv,
-  openUsdSupport ? !stdenv.hostPlatform.isDarwin,
   openvdb,
   openxr-loader,
   pkg-config,
   potrace,
   pugixml,
   python313Packages, # must use python3Packages instead of python3.pkgs, see https://github.com/NixOS/nixpkgs/issues/211340
-  rocmPackages,
-  rocmSupport ? config.rocmSupport,
   rubberband,
   runCommand,
-  SDL,
   shaderc,
-  spaceNavSupport ? stdenv.hostPlatform.isLinux,
-  sse2neon,
+  spaceNavSupport ? true,
   stdenv,
   vulkan-headers,
   vulkan-loader,
   wayland,
   wayland-protocols,
   wayland-scanner,
-  waylandSupport ? stdenv.hostPlatform.isLinux,
+  waylandSupport ? true,
   zlib,
   zstd,
 }:
 
 let
-  stdenv' = if cudaSupport then cudaPackages.backendStdenv else stdenv;
-
-  embreeSupport =
-    (!stdenv.hostPlatform.isAarch64 && stdenv.hostPlatform.isLinux) || stdenv.hostPlatform.isDarwin;
-  openImageDenoiseSupport =
-    (!stdenv.hostPlatform.isAarch64 && stdenv.hostPlatform.isLinux) || stdenv.hostPlatform.isDarwin;
-  vulkanSupport = !stdenv.hostPlatform.isDarwin;
-
+  stdenv' = cudaPackages.backendStdenv;
   python3Packages = python313Packages;
   python3 = python3Packages.python;
-  pyPkgsOpenusd = python3Packages.openusd.override (old: {
-    opensubdiv = old.opensubdiv.override { inherit cudaSupport; };
-  });
 
   libdecor' = libdecor.overrideAttrs (old: {
     # Blender uses private APIs, need to patch to expose them
     patches = (old.patches or [ ]) ++ [ ./libdecor.patch ];
   });
-
-  # See build_files/config/pipeline_config.yaml in upstream source for version
-  optix = fetchFromGitHub {
-    owner = "NVIDIA";
-    repo = "optix-dev";
-    tag = "v8.0.0";
-    hash = "sha256-SXkXZHzQH8JOkXypjjxNvT/lUlWZkCuhh6hNCHE7FkY=";
-  };
 in
 
 stdenv'.mkDerivation (finalAttrs: {
@@ -148,28 +110,7 @@ stdenv'.mkDerivation (finalAttrs: {
       --replace-fail \
         'static const char *static_libs_path = PREFIX "/" BLENDER_INSTALL_LIBDIR;' \
         'static const char *static_libs_path = BLENDER_INSTALL_LIBDIR;'
-  ''
-  + (lib.optionalString stdenv.hostPlatform.isDarwin ''
-    : > build_files/cmake/platform/platform_apple_xcode.cmake
-    substituteInPlace source/creator/CMakeLists.txt \
-      --replace-fail '${"$"}{LIBDIR}/python' \
-                '${python3}' \
-      --replace-fail '${"$"}{LIBDIR}/materialx/' '${python3Packages.materialx}/'
-    substituteInPlace build_files/cmake/platform/platform_apple.cmake \
-      --replace-fail '${"$"}{LIBDIR}/brotli/lib/libbrotlicommon-static.a' \
-                '${lib.getLib brotli}/lib/libbrotlicommon.dylib' \
-      --replace-fail '${"$"}{LIBDIR}/brotli/lib/libbrotlidec-static.a' \
-                '${lib.getLib brotli}/lib/libbrotlidec.dylib'
-  '')
-  + (lib.optionalString rocmSupport ''
-    substituteInPlace extern/hipew/src/hipew.c \
-      --replace-fail '"libamdhip64.so"' '"${rocmPackages.clr}/lib/libamdhip64.so"' \
-      --replace-fail '"opt/rocm/hip/bin"' '"${rocmPackages.clr}/bin"'
-  '')
-  + (lib.optionalString oneapiSupport ''
-    substituteInPlace intern/cycles/kernel/device/oneapi/CMakeLists.txt \
-      --replace-fail ''\'''${cycles_kernel_runtime_lib_target_path}' '"''${CMAKE_INSTALL_LIBDIR}"'
-  '');
+  '';
 
   env.NIX_CFLAGS_COMPILE = "-I${python3}/include/${python3.libPrefix}";
 
@@ -186,19 +127,21 @@ stdenv'.mkDerivation (finalAttrs: {
 
     (lib.cmakeBool "WITH_BUILDINFO" false)
     (lib.cmakeBool "WITH_CPU_CHECK" false)
-    (lib.cmakeBool "WITH_CYCLES_CUDA_BINARIES" cudaSupport)
-    (lib.cmakeBool "WITH_CYCLES_DEVICE_HIP" rocmSupport)
-    (lib.cmakeBool "WITH_CYCLES_DEVICE_ONEAPI" oneapiSupport)
-    (lib.cmakeBool "WITH_CYCLES_ONEAPI_BINARIES" oneapiSupport)
-    (lib.cmakeBool "WITH_CYCLES_DEVICE_OPTIX" cudaSupport)
-    (lib.cmakeBool "WITH_CYCLES_EMBREE" embreeSupport)
+    (lib.cmakeBool "WITH_CYCLES_CUDA_BINARIES" true)
+    (lib.cmakeBool "WITH_CYCLES_DEVICE_CUDA" true)
+    (lib.cmakeBool "WITH_CYCLES_DEVICE_HIP" false)
+    (lib.cmakeBool "WITH_CYCLES_HIP_BINARIES" false)
+    (lib.cmakeBool "WITH_CYCLES_DEVICE_ONEAPI" false)
+    (lib.cmakeBool "WITH_CYCLES_ONEAPI_BINARIES" false)
+    (lib.cmakeBool "WITH_CYCLES_DEVICE_OPTIX" false)
+    (lib.cmakeBool "WITH_CYCLES_EMBREE" true)
     (lib.cmakeBool "WITH_CYCLES_OSL" true)
     (lib.cmakeBool "WITH_CYCLES_PARALLEL_DEVICE_KERNEL_BUILD" true)
-    (lib.cmakeBool "WITH_HYDRA" openUsdSupport)
+    (lib.cmakeBool "WITH_HYDRA" false)
     (lib.cmakeBool "WITH_INSTALL_PORTABLE" false)
-    (lib.cmakeBool "WITH_JACK" jackaudioSupport)
+    (lib.cmakeBool "WITH_JACK" false)
     (lib.cmakeBool "WITH_LIBS_PRECOMPILED" false)
-    (lib.cmakeBool "WITH_OPENIMAGEDENOISE" openImageDenoiseSupport)
+    (lib.cmakeBool "WITH_OPENIMAGEDENOISE" true)
     (lib.cmakeBool "WITH_PIPEWIRE" false)
     (lib.cmakeBool "WITH_PULSEAUDIO" false)
     (lib.cmakeBool "WITH_PYTHON_INSTALL" false)
@@ -206,27 +149,12 @@ stdenv'.mkDerivation (finalAttrs: {
     (lib.cmakeBool "WITH_PYTHON_INSTALL_REQUESTS" false)
     (lib.cmakeBool "WITH_STRICT_BUILD_OPTIONS" true)
     (lib.cmakeBool "WITH_SYSTEM_GLOG" true)
-    (lib.cmakeBool "WITH_USD" openUsdSupport)
+    (lib.cmakeBool "WITH_USD" false)
 
     # Blender supplies its own FindAlembic.cmake (incompatible with the Alembic-supplied config file)
     (lib.cmakeFeature "ALEMBIC_INCLUDE_DIR" "${lib.getDev alembic}/include")
     (lib.cmakeFeature "ALEMBIC_LIBRARY" "${lib.getLib alembic}/lib/libAlembic${stdenv.hostPlatform.extensions.sharedLibrary}")
-  ]
-  ++ lib.optionals cudaSupport [
-    (lib.cmakeFeature "CYCLES_CUDA_BINARIES_ARCH" (lib.concatStringsSep ";" cudaArches))
-    (lib.cmakeFeature "OPTIX_ROOT_DIR" "${optix}")
-    (lib.cmakeBool "WITH_CYCLES_CUDA_BINARIES" true)
-  ]
-  ++ lib.optionals oneapiSupport [
-    (lib.cmakeFeature "IGC_INSTALL_DIR" "${intel-graphics-compiler}")
-    (lib.cmakeFeature "LEVEL_ZERO_ROOT_DIR" "${level-zero}")
-    (lib.cmakeFeature "OCLOC_INSTALL_DIR" "${intel-compute-runtime}")
-    (lib.cmakeFeature "SYCL_CPP_FLAGS" "--verbose")
-    (lib.cmakeFeature "SYCL_ROOT_DIR" "${intel-llvm}")
-  ]
-  ++ lib.optionals rocmSupport [
-    (lib.cmakeBool "WITH_CYCLES_DEVICE_HIPRT" false)
-    (lib.cmakeBool "WITH_CYCLES_HIP_BINARIES" true)
+    (lib.cmakeFeature "CYCLES_CUDA_BINARIES_ARCH" (lib.concatStringsSep ";" cudaPackages.flags.realArches))
   ]
   ++ lib.optionals waylandSupport [
     (lib.cmakeBool "WITH_GHOST_WAYLAND" true)
@@ -234,12 +162,6 @@ stdenv'.mkDerivation (finalAttrs: {
   ]
   ++ lib.optionals stdenv.cc.isClang [
     (lib.cmakeFeature "PYTHON_LINKFLAGS" "") # Clang doesn't support "-export-dynamic"
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isDarwin [
-    (lib.cmakeFeature "LIBDIR" "/does-not-exist")
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isAarch64 [
-    (lib.cmakeFeature "SSE2NEON_INCLUDE_DIR" "${sse2neon}/include")
   ];
 
   preConfigure = ''
@@ -259,9 +181,6 @@ stdenv'.mkDerivation (finalAttrs: {
     pkg-config
     python3Packages.wrapPython
     python3
-  ]
-  ++ lib.optional oneapiSupport addDriverRunpath
-  ++ lib.optionals cudaSupport [
     addDriverRunpath
     cudaPackages.cuda_nvcc
   ];
@@ -294,7 +213,7 @@ stdenv'.mkDerivation (finalAttrs: {
     openimageio
     openjpeg
     openpgl
-    (opensubdiv.override { inherit cudaSupport; })
+    (opensubdiv.override { cudaSupport = true; })
     onetbb
     openvdb
     openxr-loader
@@ -303,43 +222,24 @@ stdenv'.mkDerivation (finalAttrs: {
     python3Packages.materialx
     python3Packages.openshadinglanguage
     rubberband
+    llvmPackages.llvm
+    embree
+    (openimagedenoise.override { cudaSupport = true; })
+    libGL
+    libGLU
+    libx11
+    libxext
+    libxi
+    libxrender
+    libxxf86vm
+    openal
+    cudaPackages.cuda_cudart
+    shaderc
+    vulkan-headers
+    vulkan-loader
     zlib
     zstd
   ]
-  ++ lib.optionals oneapiSupport [
-    intel-compute-runtime
-    intel-llvm
-    opencl-headers
-  ]
-  ++ lib.optional (!oneapiSupport) llvmPackages.llvm
-  ++ lib.optional embreeSupport embree
-  ++ lib.optional rocmSupport rocmPackages.clr
-  ++ lib.optional openImageDenoiseSupport (openimagedenoise.override { inherit cudaSupport; })
-  ++ (
-    if (!stdenv.hostPlatform.isDarwin) then
-      [
-        libGL
-        libGLU
-        libx11
-        libxext
-        libxi
-        libxrender
-        libxxf86vm
-        openal
-      ]
-    else
-      [
-        SDL
-        # blender chooses Metal features based on runtime system version
-        # lets use the latest SDK and let Blender handle falling back on older systems.
-        apple-sdk_15
-        brotli
-        llvmPackages.openmp
-      ]
-  )
-  ++ lib.optionals stdenv.hostPlatform.isAarch64 [ sse2neon ]
-  ++ lib.optionals cudaSupport [ cudaPackages.cuda_cudart ]
-  ++ lib.optionals openUsdSupport [ pyPkgsOpenusd ]
   ++ lib.optionals waylandSupport [
     dbus
     libdecor'
@@ -349,13 +249,7 @@ stdenv'.mkDerivation (finalAttrs: {
     wayland-protocols
     wayland-scanner
   ]
-  ++ lib.optional jackaudioSupport libjack2
-  ++ lib.optional spaceNavSupport libspnav
-  ++ lib.optionals vulkanSupport [
-    shaderc
-    vulkan-headers
-    vulkan-loader
-  ];
+  ++ lib.optional spaceNavSupport libspnav;
 
   pythonPath =
     let
@@ -368,42 +262,25 @@ stdenv'.mkDerivation (finalAttrs: {
       ps.openshadinglanguage
       ps.requests
       ps.zstandard
-    ]
-    ++ lib.optionals openUsdSupport [ pyPkgsOpenusd ];
+    ];
 
-  blenderExecutable =
-    placeholder "out"
-    + (
-      if stdenv.hostPlatform.isDarwin then
-        "/Applications/Blender.app/Contents/MacOS/Blender"
-      else
-        "/bin/blender"
-    );
+  blenderExecutable = placeholder "out" + "/bin/blender";
 
-  postInstall =
-    lib.optionalString stdenv.hostPlatform.isDarwin ''
-      mkdir $out/Applications
-      mv $out/Blender.app $out/Applications
-    ''
-    + ''
-      buildPythonPath "''${pythonPath[*]}"
-      wrapProgram $blenderExecutable \
-        --prefix PATH : $program_PATH \
-        --prefix PYTHONPATH : "$program_PYTHONPATH" \
-        --add-flags '--python-use-system-env'
-    '';
+  postInstall = ''
+    buildPythonPath "''${pythonPath[*]}"
+    wrapProgram $blenderExecutable \
+      --prefix PATH : $program_PATH \
+      --prefix PYTHONPATH : "$program_PYTHONPATH" \
+      --add-flags '--python-use-system-env'
+  '';
 
   # Set RUNPATH so that libs in /run/opengl-driver(-32)/lib can be
   # found. See the explanation in libglvnd.
-  postFixup =
-    lib.optionalString (cudaSupport || oneapiSupport) ''
-      for program in $out/bin/blender $out/bin/.blender-wrapped; do
-        addDriverRunpath "$program"
-      done
-    ''
-    + lib.optionalString stdenv.hostPlatform.isDarwin ''
-      makeWrapper $out/Applications/Blender.app/Contents/MacOS/Blender $out/bin/blender
-    '';
+  postFixup = ''
+    for program in $out/bin/blender $out/bin/.blender-wrapped; do
+      addDriverRunpath "$program"
+    done
+  '';
 
   passthru = {
     python = python3;
@@ -423,8 +300,6 @@ stdenv'.mkDerivation (finalAttrs: {
         import bpy
         bpy.context.scene.eevee.taa_render_samples = 32
         bpy.context.scene.cycles.samples = 32
-        if ${if (stdenv.hostPlatform.isAarch64 && stdenv.hostPlatform.isLinux) then "True" else "False"}:
-            bpy.context.scene.cycles.use_denoising = False
         bpy.context.scene.render.resolution_x = 100
         bpy.context.scene.render.resolution_y = 100
         bpy.context.scene.render.threads_mode = 'FIXED'
@@ -448,17 +323,15 @@ stdenv'.mkDerivation (finalAttrs: {
       '';
       tester-cudaAvailable = cudaPackages.writeGpuTestPython { } ''
         import subprocess
-        subprocess.run([${
-          lib.concatMapStringsSep ", " (x: ''"${x}"'') [
-            (lib.getExe (blender.override { cudaSupport = true; }))
-            "--background"
-            "-noaudio"
-            "--python-exit-code"
-            "1"
-            "--python"
-            "${./test-cuda.py}"
-          ]
-        }], check=True)  # noqa: E501
+        subprocess.run([
+            "${lib.getExe finalAttrs.finalPackage}",
+            "--background",
+            "-noaudio",
+            "--python-exit-code",
+            "1",
+            "--python",
+            "${./test-cuda.py}",
+        ], check=True)
       '';
     };
 
@@ -472,8 +345,10 @@ stdenv'.mkDerivation (finalAttrs: {
   meta = {
     description = "3D Creation/Animation/Publishing System";
     homepage = "https://www.blender.org";
-    # OptiX, enabled with cudaSupport, is non-free.
-    license = with lib.licenses; [ gpl2Plus ] ++ lib.optional cudaSupport nvidiaCudaRedist;
+    license = with lib.licenses; [
+      gpl2Plus
+      nvidiaCudaRedist
+    ];
     donationPage = "https://fund.blender.org/";
 
     platforms = [ "x86_64-linux" ];
