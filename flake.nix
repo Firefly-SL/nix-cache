@@ -1,119 +1,35 @@
 {
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nixpkgs-master.url = "github:NixOS/nixpkgs/master";
-  };
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/master";
 
   outputs =
-    {
-      nixpkgs,
-      nixpkgs-master,
-      ...
-    }:
+    { nixpkgs, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
       };
-      pkgs-master = import nixpkgs-master {
-        inherit system;
-        config.allowUnfree = true;
-      };
     in
     {
-      packages.${system} = {
-
-        kernel-main-machine =
-          let
-            linuxv3 = pkgs.linuxPackages_cachyos.cachyOverride {
-              cachyVars = pkgs.linuxPackages_cachyos.kernel.cachyConfig.cachyVars // {
-                "_processor_opt" = "GENERIC_V3";
-              };
-            };
-          in
-          linuxv3.kernel;
-
-        blender-cuda =
-          (pkgs-master.blender.override {
-            cudaSupport = true;
-            openUsdSupport = false;
-            jackaudioSupport = false;
-          }).overrideAttrs
-            (oldAttrs: {
-              cmakeFlags = (oldAttrs.cmakeFlags or [ ]) ++ [
-                "-DWITH_CYCLES_DEVICE_HIP=OFF"
-                "-DWITH_CYCLES_HIP_BINARIES=OFF"
-                "-DWITH_CYCLES_DEVICE_ONEAPI=OFF"
-                "-DWITH_CYCLES_ONEAPI_BINARIES=OFF"
-                "-DWITH_CYCLES_DEVICE_OPTIX=OFF"
-                "-DCYCLES_CUDA_BINARIES_ARCH=sm_50"
-              ];
-
-              # postPatch = (oldAttrs.postPatch or "") + ''
-              #   cp ${./assets/blender/splash.png} release/datafiles/splash.png
-              #   cp ${./assets/blender/startup.blend} release/datafiles/startup.blend
-              # '';
-            });
-
-        cli-packages = pkgs.symlinkJoin {
-          name = "cli-packages";
-          paths =
-            (with pkgs; [
-              cht-sh
-              neovim
-              zoxide
-              tmux
-              cloudflared
-              wiremix
-              btop
-              fzf
-              bat
-              lsd
-              ripgrep
-              fd
-              ffmpeg
-              awww
-              fastfetch
-            ])
-            ++ [
-              pkgs-master.pywal16
+      packages.${system}.blender-cuda =
+        (pkgs.callPackage ./blender/package.nix {
+          cudaSupport = true;
+          openUsdSupport = false;
+          jackaudioSupport = false;
+          oneapiSupport = false;
+          rocmSupport = false;
+        }).overrideAttrs
+          (oldAttrs: {
+            cmakeFlags = (oldAttrs.cmakeFlags or [ ]) ++ [
+              "-DWITH_CYCLES_DEVICE_CUDA=ON"
+              "-DWITH_CYCLES_CUDA_BINARIES=ON"
+              "-DWITH_CYCLES_DEVICE_HIP=OFF"
+              "-DWITH_CYCLES_HIP_BINARIES=OFF"
+              "-DWITH_CYCLES_DEVICE_ONEAPI=OFF"
+              "-DWITH_CYCLES_ONEAPI_BINARIES=OFF"
+              "-DWITH_CYCLES_DEVICE_OPTIX=OFF"
+              "-DCYCLES_CUDA_BINARIES_ARCH=sm_50"
             ];
-        };
-
-        dev-packages = pkgs.symlinkJoin {
-          name = "dev-packages";
-          paths = with pkgs; [
-            bun
-            basedpyright
-            ruff
-            lua-language-server
-            stylua
-            bash-language-server
-            vscode-langservers-extracted
-            emmet-ls
-            tree-sitter
-            lazygit
-          ];
-        };
-
-        misc = pkgs.symlinkJoin {
-          name = "misc-packages";
-          paths = with pkgs; [
-            ly
-            niri
-            (obs-studio.override {
-              browserSupport = false;
-              scriptingSupport = false;
-            })
-            plezy
-            affine
-            mpv
-            flameshot
-            hyprpicker
-            xwayland-satellite
-          ];
-        };
-      };
+          });
     };
 }
